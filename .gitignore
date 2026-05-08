@@ -1,0 +1,33 @@
+# Android / Kotlin
+*.iml
+.gradle
+build/
+captures/
+.externalNativeBuild
+.cxx
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Local SDK path (machine-specific)
+local.properties
+
+# IDE - IntelliJ/Android Studio
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kotlin
+*.class
+*.kotlin_module
+
+# Config files with secrets (API keys, tokens, URLs)
+api.properties
+*.env
+secrets.properties
