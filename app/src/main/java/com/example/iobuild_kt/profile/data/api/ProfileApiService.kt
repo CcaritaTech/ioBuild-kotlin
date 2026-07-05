@@ -13,12 +13,25 @@ data class UpdateProfileRequest(
     val age: Int = 0, val phoneNumber: String = "", val photoUrl: String = ""
 )
 
+data class CreateProfileRequest(
+    val userId: Int,
+    val photoUrl: String,
+    val name: String,
+    val username: String,
+    val address: String,
+    val age: Int,
+    val phoneNumber: String
+)
+
 interface ProfileApiService {
     @GET("profiles")
     suspend fun getAllProfiles(): List<ProfileDto>
 
     @PUT("profiles/{id}")
     suspend fun updateProfile(@Path("id") id: Int, @Body request: UpdateProfileRequest): ProfileDto
+
+    @POST("profiles")
+    suspend fun createProfile(@Body request: CreateProfileRequest): ProfileDto
 
     @POST("profiles/second-email")
     suspend fun setSecondEmail(@Query("userId") userId: Int, @Body body: SecondEmailBody)

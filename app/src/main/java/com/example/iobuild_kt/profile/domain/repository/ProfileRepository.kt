@@ -5,4 +5,13 @@ import com.example.iobuild_kt.profile.domain.model.Profile
 interface ProfileRepository {
     suspend fun getProfile(userId: Int): Result<Profile>
     suspend fun updateProfile(profile: Profile): Result<Profile>
+    suspend fun createProfile(
+        userId: Int,
+        photoUrl: String,
+        name: String,
+        username: String,
+        address: String,
+        age: Int,
+        phoneNumber: String
+    ): Result<Profile>
 }

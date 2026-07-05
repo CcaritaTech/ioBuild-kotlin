@@ -1,5 +1,6 @@
 package com.example.iobuild_kt.profile.data.repository
 
+import com.example.iobuild_kt.profile.data.api.CreateProfileRequest
 import com.example.iobuild_kt.profile.data.api.ProfileApiService
 import com.example.iobuild_kt.profile.data.api.SecondEmailBody
 import com.example.iobuild_kt.profile.data.dto.toDomain
@@ -16,6 +17,20 @@ class ProfileRepositoryImpl(private val api: ProfileApiService) : ProfileReposit
 
     override suspend fun updateProfile(profile: Profile): Result<Profile> = runCatching {
         api.updateProfile(profile.id, profile.toUpdateRequest()).toDomain()
+    }
+
+    override suspend fun createProfile(
+        userId: Int,
+        photoUrl: String,
+        name: String,
+        username: String,
+        address: String,
+        age: Int,
+        phoneNumber: String
+    ): Result<Profile> = runCatching {
+        api.createProfile(
+            CreateProfileRequest(userId, photoUrl, name, username, address, age, phoneNumber)
+        ).toDomain()
     }
 
     suspend fun setSecondEmail(userId: Int, email: String): Result<Unit> = runCatching {
