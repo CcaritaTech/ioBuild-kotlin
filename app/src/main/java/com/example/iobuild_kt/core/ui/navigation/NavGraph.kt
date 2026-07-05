@@ -6,16 +6,17 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.example.iobuild_kt.auth.presentation.LoginScreen
+import com.example.iobuild_kt.auth.presentation.RegisterAccountScreen
+import com.example.iobuild_kt.auth.presentation.RegisterProfileScreen
+import com.example.iobuild_kt.auth.presentation.RegisterViewModel
 import com.example.iobuild_kt.core.i18n.LocalLanguage
 import com.example.iobuild_kt.core.ui.components.IoScaffold
-import com.example.iobuild_kt.clients.presentation.client_list.ClientListScreen
 import com.example.iobuild_kt.dashboard.presentation.DashboardScreen
 import com.example.iobuild_kt.devices.presentation.device_list.DeviceListScreen
 import com.example.iobuild_kt.profile.presentation.ProfileScreen
-import com.example.iobuild_kt.settings.presentation.SettingsScreen
-import com.example.iobuild_kt.subscription.presentation.SubscriptionScreen
 import com.example.iobuild_kt.projects.presentation.project_detail.ProjectDetailScreen
 import com.example.iobuild_kt.projects.presentation.project_form.ProjectFormScreen
 import com.example.iobuild_kt.projects.presentation.project_list.ProjectListScreen
@@ -40,8 +41,36 @@ fun NavGraph(
                         navController.navigate(Screen.Dashboard.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
+                    },
+                    onNavigateToRegister = {
+                        navController.navigate("register")
                     }
                 )
+            }
+
+            navigation(startDestination = Screen.RegisterAccount.route, route = "register") {
+                composable(Screen.RegisterAccount.route) { backStackEntry ->
+                    val parentEntry = navController.getBackStackEntry("register")
+                    val vm = koinViewModel<RegisterViewModel>(viewModelStoreOwner = parentEntry)
+                    RegisterAccountScreen(
+                        viewModel = vm,
+                        onNext = { navController.navigate(Screen.RegisterProfile.route) },
+                        onCancel = { navController.popBackStack() }
+                    )
+                }
+                composable(Screen.RegisterProfile.route) { backStackEntry ->
+                    val parentEntry = navController.getBackStackEntry("register")
+                    val vm = koinViewModel<RegisterViewModel>(viewModelStoreOwner = parentEntry)
+                    RegisterProfileScreen(
+                        viewModel = vm,
+                        onBack = { navController.popBackStack() },
+                        onRegisterSuccess = {
+                            navController.navigate(Screen.Dashboard.route) {
+                                popUpTo("register") { inclusive = true }
+                            }
+                        }
+                    )
+                }
             }
 
             // -- AUTHENTICATED (wrapped with IoScaffold) --
@@ -144,20 +173,9 @@ fun NavGraph(
                 }
             }
 
-            // -- PLACEHOLDERS (also wrapped with IoScaffold) --
-            composable(Screen.ClientList.route) {
-                IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
-                    ClientListScreen()
-                }
-            }
             composable(Screen.DeviceList.route) {
                 IoScaffold(currentRoute = Screen.DeviceList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
                     DeviceListScreen()
-                }
-            }
-            composable(Screen.Subscription.route) {
-                IoScaffold(currentRoute = Screen.Subscription.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
-                    SubscriptionScreen()
                 }
             }
             composable(Screen.Profile.route) {
@@ -165,9 +183,21 @@ fun NavGraph(
                     ProfileScreen()
                 }
             }
+
+            // -- PLACEHOLDERS (clients/subscription/settings not yet built; kept so nav drawer items don't crash) --
+            composable(Screen.ClientList.route) {
+                IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
+                    PlaceholderScreen(title = Screen.ClientList.title)
+                }
+            }
+            composable(Screen.Subscription.route) {
+                IoScaffold(currentRoute = Screen.Subscription.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
+                    PlaceholderScreen(title = Screen.Subscription.title)
+                }
+            }
             composable(Screen.Settings.route) {
                 IoScaffold(currentRoute = Screen.Settings.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
-                    SettingsScreen()
+                    PlaceholderScreen(title = Screen.Settings.title)
                 }
             }
         }
