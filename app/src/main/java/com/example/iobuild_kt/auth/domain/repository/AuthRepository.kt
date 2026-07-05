@@ -4,6 +4,7 @@ import com.example.iobuild_kt.auth.domain.model.AuthenticatedUser
 
 interface AuthRepository {
     suspend fun signIn(email: String, password: String): Result<AuthenticatedUser>
+    suspend fun signUp(email: String, password: String): Result<Unit>
     suspend fun signOut()
     suspend fun isLoggedIn(): Boolean
     suspend fun getSavedUserId(): Int?

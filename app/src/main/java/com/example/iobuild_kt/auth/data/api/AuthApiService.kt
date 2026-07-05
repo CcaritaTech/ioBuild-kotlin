@@ -12,7 +12,16 @@ data class SignInResponse(
     val token: String
 )
 
+data class SignUpRequest(
+    val email: String,
+    val password: String,
+    val role: String = "Builder"
+)
+
 interface AuthApiService {
     @POST("authentication/sign-in")
     suspend fun signIn(@Body request: SignInRequest): SignInResponse
+
+    @POST("authentication/sign-up")
+    suspend fun signUp(@Body request: SignUpRequest): String
 }

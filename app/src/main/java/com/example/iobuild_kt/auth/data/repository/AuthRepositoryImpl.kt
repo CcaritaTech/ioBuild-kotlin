@@ -2,6 +2,7 @@ package com.example.iobuild_kt.auth.data.repository
 
 import com.example.iobuild_kt.auth.data.api.AuthApiService
 import com.example.iobuild_kt.auth.data.api.SignInRequest
+import com.example.iobuild_kt.auth.data.api.SignUpRequest
 import com.example.iobuild_kt.auth.domain.model.AuthenticatedUser
 import com.example.iobuild_kt.auth.domain.repository.AuthRepository
 import com.example.iobuild_kt.core.data.TokenManager
@@ -28,6 +29,24 @@ class AuthRepositoryImpl(
         } catch (e: HttpException) {
             val message = when (e.code()) {
                 in 400..499 -> "Credenciales incorrectas. Verifica tu email y contraseña."
+                else -> "Error del servidor. Intenta de nuevo más tarde."
+            }
+            Result.failure(Throwable(message))
+        } catch (e: IOException) {
+            Result.failure(Throwable("Error de conexión. Verifica tu internet."))
+        } catch (e: Exception) {
+            Result.failure(Throwable("Error inesperado. Intenta de nuevo."))
+        }
+    }
+
+    override suspend fun signUp(email: String, password: String): Result<Unit> {
+        return try {
+            api.signUp(SignUpRequest(email = email, password = password, role = "Builder"))
+            Result.success(Unit)
+        } catch (e: HttpException) {
+            val message = when (e.code()) {
+                409 -> "Ese correo ya está registrado."
+                in 400..499 -> "Revisa los datos ingresados."
                 else -> "Error del servidor. Intenta de nuevo más tarde."
             }
             Result.failure(Throwable(message))
