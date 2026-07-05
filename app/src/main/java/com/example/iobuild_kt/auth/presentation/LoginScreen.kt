@@ -47,6 +47,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
     viewModel: LoginViewModel = org.koin.androidx.compose.koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -160,7 +161,7 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(onClick = { /* TODO: navigate to register */ }) {
+            TextButton(onClick = onNavigateToRegister) {
                 Text(lang("login.no_account"))
             }
 

@@ -15,6 +15,8 @@ sealed class Screen(
     val icon: ImageVector? = null
 ) {
     object Login : Screen("login", "Iniciar Sesión")
+    object RegisterAccount : Screen("register/account", "Crear Cuenta")
+    object RegisterProfile : Screen("register/profile", "Datos del Perfil")
     object Dashboard : Screen("dashboard", "Inicio", Icons.Default.Dashboard)
     object ProjectList : Screen("projects", "Proyectos", Icons.Default.Quiz)
     object ProjectDetail : Screen("projects/{projectId}", "Detalle del Proyecto") {
