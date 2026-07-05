@@ -31,3 +31,6 @@ Thumbs.db
 api.properties
 *.env
 secrets.properties
+
+# Local planning docs (specs/plans) - not shared to the remote repo
+docs/superpowers/
