@@ -71,6 +71,10 @@ class RegisterViewModel(
     }
 
     fun backToAccountStep() {
+        // Accepted tradeoff: if sign-up already succeeded but a later step failed, and the user
+        // comes back here and resubmits the SAME email unchanged, sign-up is re-sent and hits a
+        // 409. Do not remove this reset to "fix" that — without it, re-entering ACCOUNT after a
+        // successful sign-up would skip straight back to PROFILE via stale `signedUp` state.
         signedUp = false
         authenticatedUser = null
         _state.value = _state.value.copy(step = RegisterStep.ACCOUNT, error = null)

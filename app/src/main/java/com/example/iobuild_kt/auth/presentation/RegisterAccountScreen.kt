@@ -32,6 +32,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.iobuild_kt.core.i18n.lang
 import org.koin.androidx.compose.koinViewModel
 
+/**
+ * [viewModel] must always be the `"register"` nav-graph-scoped instance passed explicitly by
+ * `NavGraph.kt`; the `koinViewModel()` default only exists to satisfy the standard call
+ * convention used by every screen in this codebase and must never be relied upon here.
+ */
 @Composable
 fun RegisterAccountScreen(
     onNext: () -> Unit,

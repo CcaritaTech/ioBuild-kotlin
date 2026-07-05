@@ -1,5 +1,6 @@
 package com.example.iobuild_kt.auth.presentation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,6 +34,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.iobuild_kt.core.i18n.lang
 import org.koin.androidx.compose.koinViewModel
 
+/**
+ * [viewModel] must always be the `"register"` nav-graph-scoped instance passed explicitly by
+ * `NavGraph.kt`; the `koinViewModel()` default only exists to satisfy the standard call
+ * convention used by every screen in this codebase and must never be relied upon here.
+ */
 @Composable
 fun RegisterProfileScreen(
     onBack: () -> Unit,
@@ -51,6 +57,14 @@ fun RegisterProfileScreen(
         if (state.step == RegisterStep.ACCOUNT) {
             onBack()
         }
+    }
+
+    // Intercept the system back gesture/button so it goes through the same ViewModel state
+    // transition as the on-screen "Atrás" button. Without this, popping the nav stack directly
+    // leaves the ViewModel's step stuck on PROFILE, which makes RegisterAccountScreen's
+    // LaunchedEffect(state.step) immediately call onNext() again when it re-composes.
+    BackHandler {
+        viewModel.backToAccountStep()
     }
 
     Box(
