@@ -71,6 +71,8 @@ class RegisterViewModel(
     }
 
     fun backToAccountStep() {
+        signedUp = false
+        authenticatedUser = null
         _state.value = _state.value.copy(step = RegisterStep.ACCOUNT, error = null)
     }
 
@@ -97,6 +99,8 @@ class RegisterViewModel(
     }
 
     fun submitProfileStep() {
+        if (_state.value.isLoading) return
+
         val s = _state.value
         val ageInt = s.age.toIntOrNull()
         when {

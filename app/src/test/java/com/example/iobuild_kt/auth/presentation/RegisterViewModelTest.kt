@@ -4,6 +4,7 @@ import com.example.iobuild_kt.auth.domain.model.AuthenticatedUser
 import com.example.iobuild_kt.auth.domain.repository.AuthRepository
 import com.example.iobuild_kt.profile.domain.model.Profile
 import com.example.iobuild_kt.profile.domain.repository.ProfileRepository
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -33,6 +34,37 @@ private class FakeAuthRepository(
     override suspend fun signUp(email: String, password: String): Result<Unit> {
         signUpCallCount++
         return signUpResult
+    }
+
+    override suspend fun signOut() {}
+    override suspend fun isLoggedIn(): Boolean = false
+    override suspend fun getSavedUserId(): Int? = null
+    override suspend fun getSavedUserRole(): String? = null
+}
+
+/**
+ * Auth repo whose signUp() suspends until [releaseSignUp] is completed, so tests can
+ * observe state while a submitProfileStep() call is still in flight (e.g. to simulate
+ * a double-tap before the first invocation finishes).
+ */
+private class GatedAuthRepository(
+    var signInResult: Result<AuthenticatedUser> = Result.success(
+        AuthenticatedUser(id = 42, email = "ana@example.com", role = "Builder", token = "tok")
+    )
+) : AuthRepository {
+    val releaseSignUp = CompletableDeferred<Unit>()
+    var signUpCallCount = 0
+    var signInCallCount = 0
+
+    override suspend fun signIn(email: String, password: String): Result<AuthenticatedUser> {
+        signInCallCount++
+        return signInResult
+    }
+
+    override suspend fun signUp(email: String, password: String): Result<Unit> {
+        signUpCallCount++
+        releaseSignUp.await()
+        return Result.success(Unit)
     }
 
     override suspend fun signOut() {}
@@ -162,6 +194,49 @@ class RegisterViewModelTest {
         assertEquals(1, authRepo.signUpCallCount)
         assertEquals(1, authRepo.signInCallCount)
         assertEquals(2, profileRepo.createProfileCallCount)
+        assertTrue(vm.state.value.isSuccess)
+    }
+
+    @Test
+    fun `backToAccountStep clears cached sign-up and sign-in so editing credentials forces a fresh submit`() = runTest {
+        val authRepo = FakeAuthRepository()
+        val profileRepo = FakeProfileRepository()
+        val vm = RegisterViewModel(authRepo, profileRepo)
+        fillValidAccountStep(vm)
+        fillValidProfileFields(vm)
+
+        vm.submitProfileStep()
+        assertEquals(1, authRepo.signUpCallCount)
+        assertEquals(1, authRepo.signInCallCount)
+        assertTrue(vm.state.value.isSuccess)
+
+        vm.backToAccountStep()
+        vm.onEmailChanged("otra@example.com")
+        vm.onPasswordChanged("secret123")
+        vm.onConfirmPasswordChanged("secret123")
+        vm.submitAccountStep()
+        vm.submitProfileStep()
+
+        assertEquals(2, authRepo.signUpCallCount)
+        assertEquals(2, authRepo.signInCallCount)
+    }
+
+    @Test
+    fun `a second submitProfileStep call while the first is still in flight is rejected by the loading guard`() = runTest {
+        val authRepo = GatedAuthRepository()
+        val profileRepo = FakeProfileRepository()
+        val vm = RegisterViewModel(authRepo, profileRepo)
+        fillValidAccountStep(vm)
+        fillValidProfileFields(vm)
+
+        vm.submitProfileStep()
+        assertTrue(vm.state.value.isLoading)
+
+        vm.submitProfileStep()
+
+        authRepo.releaseSignUp.complete(Unit)
+
+        assertEquals(1, authRepo.signUpCallCount)
         assertTrue(vm.state.value.isSuccess)
     }
 }
