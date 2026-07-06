@@ -127,23 +127,25 @@ class RegisterViewModel(
             return
         }
 
-        performRegistration()
+        performRegistration(ageInt!!)
     }
 
     fun onPrivacyAccepted() {
         _state.value = _state.value.copy(hasAcceptedPrivacy = true, showPrivacyConsent = false)
-        performRegistration()
+        // Age was already validated by submitProfileStep() before the modal was shown, and the
+        // form can't be edited while the dialog is open, so this is always non-null here.
+        val ageInt = _state.value.age.toIntOrNull() ?: return
+        performRegistration(ageInt)
     }
 
     fun onPrivacyDismissed() {
         _state.value = _state.value.copy(showPrivacyConsent = false)
     }
 
-    private fun performRegistration() {
+    private fun performRegistration(age: Int) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             val current = _state.value
-            val ageInt = current.age.toIntOrNull() ?: return@launch
 
             if (!signedUp) {
                 val signUpResult = authRepository.signUp(current.email, current.password)
@@ -176,7 +178,7 @@ class RegisterViewModel(
                 name = current.name,
                 username = current.username,
                 address = current.address,
-                age = ageInt,
+                age = age,
                 phoneNumber = current.phoneNumber
             )
             profileResult.fold(

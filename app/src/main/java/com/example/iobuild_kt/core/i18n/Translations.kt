@@ -63,7 +63,7 @@ object Translations {
         "register.privacy_body_1" to "En IoBuild recopilamos tu correo electrónico, nombre, nombre de usuario, dirección, edad y número de teléfono únicamente para crear y administrar tu cuenta de Constructor.",
         "register.privacy_body_2" to "Usamos estos datos para autenticarte, mostrarte tu perfil dentro de la app y brindarte soporte relacionado con tus proyectos.",
         "register.privacy_body_3" to "No compartimos tu información personal con terceros sin tu consentimiento explícito.",
-        "register.privacy_body_4" to "Podés solicitar acceso, rectificación o eliminación de tus datos personales en cualquier momento contactando al soporte de la app.",
+        "register.privacy_body_4" to "Puedes solicitar acceso, rectificación o eliminación de tus datos personales en cualquier momento contactando al soporte de la app.",
         "register.privacy_checkbox" to "He leído y acepto el tratamiento de mis datos personales.",
         "register.privacy_accept" to "Aceptar y continuar",
         "register.privacy_cancel" to "Cancelar",
