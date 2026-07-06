@@ -59,6 +59,15 @@ object Translations {
         "register.back" to "Atrás",
         "register.submit" to "Registrarme",
 
+        "register.privacy_title" to "Privacidad y Protección de Datos",
+        "register.privacy_body_1" to "En IoBuild recopilamos tu correo electrónico, nombre, nombre de usuario, dirección, edad y número de teléfono únicamente para crear y administrar tu cuenta de Constructor.",
+        "register.privacy_body_2" to "Usamos estos datos para autenticarte, mostrarte tu perfil dentro de la app y brindarte soporte relacionado con tus proyectos.",
+        "register.privacy_body_3" to "No compartimos tu información personal con terceros sin tu consentimiento explícito.",
+        "register.privacy_body_4" to "Podés solicitar acceso, rectificación o eliminación de tus datos personales en cualquier momento contactando al soporte de la app.",
+        "register.privacy_checkbox" to "He leído y acepto el tratamiento de mis datos personales.",
+        "register.privacy_accept" to "Aceptar y continuar",
+        "register.privacy_cancel" to "Cancelar",
+
         "dashboard.title" to "Panel del Constructor",
         "dashboard.loading" to "Cargando dashboard...",
         "dashboard.error" to "Error al cargar el dashboard. Intenta de nuevo.",
@@ -256,6 +265,15 @@ object Translations {
         "register.phone_number_placeholder" to "Enter your phone number",
         "register.back" to "Back",
         "register.submit" to "Sign up",
+
+        "register.privacy_title" to "Privacy & Data Protection",
+        "register.privacy_body_1" to "IoBuild collects your email, name, username, address, age, and phone number solely to create and manage your Builder account.",
+        "register.privacy_body_2" to "We use this data to authenticate you, display your profile within the app, and provide support related to your projects.",
+        "register.privacy_body_3" to "We do not share your personal information with third parties without your explicit consent.",
+        "register.privacy_body_4" to "You can request access to, correction of, or deletion of your personal data at any time by contacting app support.",
+        "register.privacy_checkbox" to "I have read and accept the processing of my personal data.",
+        "register.privacy_accept" to "Accept and continue",
+        "register.privacy_cancel" to "Cancel",
 
         "dashboard.title" to "Builder Dashboard",
         "dashboard.loading" to "Loading dashboard...",
