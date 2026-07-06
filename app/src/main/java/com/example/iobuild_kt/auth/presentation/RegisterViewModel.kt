@@ -24,7 +24,9 @@ data class RegisterUiState(
     val step: RegisterStep = RegisterStep.ACCOUNT,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isSuccess: Boolean = false
+    val isSuccess: Boolean = false,
+    val showPrivacyConsent: Boolean = false,
+    val hasAcceptedPrivacy: Boolean = false
 )
 
 class RegisterViewModel(
@@ -75,6 +77,8 @@ class RegisterViewModel(
         // comes back here and resubmits the SAME email unchanged, sign-up is re-sent and hits a
         // 409. Do not remove this reset to "fix" that — without it, re-entering ACCOUNT after a
         // successful sign-up would skip straight back to PROFILE via stale `signedUp` state.
+        // `hasAcceptedPrivacy` is intentionally NOT reset here: consent is about the person using
+        // the device, not about which credentials end up submitted.
         signedUp = false
         authenticatedUser = null
         _state.value = _state.value.copy(step = RegisterStep.ACCOUNT, error = null)
@@ -118,9 +122,28 @@ class RegisterViewModel(
             }
         }
 
+        if (!_state.value.hasAcceptedPrivacy) {
+            _state.value = _state.value.copy(showPrivacyConsent = true)
+            return
+        }
+
+        performRegistration()
+    }
+
+    fun onPrivacyAccepted() {
+        _state.value = _state.value.copy(hasAcceptedPrivacy = true, showPrivacyConsent = false)
+        performRegistration()
+    }
+
+    fun onPrivacyDismissed() {
+        _state.value = _state.value.copy(showPrivacyConsent = false)
+    }
+
+    private fun performRegistration() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
             val current = _state.value
+            val ageInt = current.age.toIntOrNull() ?: return@launch
 
             if (!signedUp) {
                 val signUpResult = authRepository.signUp(current.email, current.password)
@@ -153,7 +176,7 @@ class RegisterViewModel(
                 name = current.name,
                 username = current.username,
                 address = current.address,
-                age = ageInt!!,
+                age = ageInt,
                 phoneNumber = current.phoneNumber
             )
             profileResult.fold(

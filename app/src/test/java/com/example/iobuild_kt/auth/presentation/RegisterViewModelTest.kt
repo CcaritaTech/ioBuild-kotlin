@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -153,10 +154,11 @@ class RegisterViewModelTest {
 
         assertTrue(vm.state.value.error != null)
         assertEquals(RegisterStep.PROFILE, vm.state.value.step)
+        assertFalse(vm.state.value.showPrivacyConsent)
     }
 
     @Test
-    fun `submitProfileStep runs sign-up, sign-in and create-profile in order and reports success`() = runTest {
+    fun `submitProfileStep shows the privacy consent modal instead of submitting immediately`() = runTest {
         val authRepo = FakeAuthRepository()
         val profileRepo = FakeProfileRepository()
         val vm = RegisterViewModel(authRepo, profileRepo)
@@ -165,6 +167,45 @@ class RegisterViewModelTest {
 
         vm.submitProfileStep()
 
+        assertTrue(vm.state.value.showPrivacyConsent)
+        assertFalse(vm.state.value.hasAcceptedPrivacy)
+        assertEquals(0, authRepo.signUpCallCount)
+        assertEquals(0, profileRepo.createProfileCallCount)
+        assertFalse(vm.state.value.isSuccess)
+    }
+
+    @Test
+    fun `onPrivacyDismissed hides the modal without submitting anything`() = runTest {
+        val authRepo = FakeAuthRepository()
+        val profileRepo = FakeProfileRepository()
+        val vm = RegisterViewModel(authRepo, profileRepo)
+        fillValidAccountStep(vm)
+        fillValidProfileFields(vm)
+        vm.submitProfileStep()
+
+        vm.onPrivacyDismissed()
+
+        assertFalse(vm.state.value.showPrivacyConsent)
+        assertFalse(vm.state.value.hasAcceptedPrivacy)
+        assertEquals(0, authRepo.signUpCallCount)
+        assertEquals(0, profileRepo.createProfileCallCount)
+        assertFalse(vm.state.value.isSuccess)
+        assertEquals(RegisterStep.PROFILE, vm.state.value.step)
+    }
+
+    @Test
+    fun `onPrivacyAccepted runs sign-up, sign-in and create-profile in order and reports success`() = runTest {
+        val authRepo = FakeAuthRepository()
+        val profileRepo = FakeProfileRepository()
+        val vm = RegisterViewModel(authRepo, profileRepo)
+        fillValidAccountStep(vm)
+        fillValidProfileFields(vm)
+        vm.submitProfileStep()
+
+        vm.onPrivacyAccepted()
+
+        assertFalse(vm.state.value.showPrivacyConsent)
+        assertTrue(vm.state.value.hasAcceptedPrivacy)
         assertEquals(1, authRepo.signUpCallCount)
         assertEquals(1, authRepo.signInCallCount)
         assertEquals(1, profileRepo.createProfileCallCount)
@@ -172,7 +213,7 @@ class RegisterViewModelTest {
     }
 
     @Test
-    fun `retry after create-profile failure does not resend sign-up or sign-in`() = runTest {
+    fun `retry after create-profile failure does not resend sign-up, sign-in, or the consent modal`() = runTest {
         val authRepo = FakeAuthRepository()
         val profileRepo = FakeProfileRepository(
             createProfileResult = Result.failure(Throwable("server error"))
@@ -182,6 +223,7 @@ class RegisterViewModelTest {
         fillValidProfileFields(vm)
 
         vm.submitProfileStep()
+        vm.onPrivacyAccepted()
         assertEquals(1, authRepo.signUpCallCount)
         assertEquals(1, authRepo.signInCallCount)
         assertTrue(vm.state.value.error != null)
@@ -191,6 +233,7 @@ class RegisterViewModelTest {
         )
         vm.submitProfileStep()
 
+        assertFalse(vm.state.value.showPrivacyConsent)
         assertEquals(1, authRepo.signUpCallCount)
         assertEquals(1, authRepo.signInCallCount)
         assertEquals(2, profileRepo.createProfileCallCount)
@@ -206,6 +249,7 @@ class RegisterViewModelTest {
         fillValidProfileFields(vm)
 
         vm.submitProfileStep()
+        vm.onPrivacyAccepted()
         assertEquals(1, authRepo.signUpCallCount)
         assertEquals(1, authRepo.signInCallCount)
         assertTrue(vm.state.value.isSuccess)
@@ -219,6 +263,7 @@ class RegisterViewModelTest {
 
         assertEquals(2, authRepo.signUpCallCount)
         assertEquals(2, authRepo.signInCallCount)
+        assertTrue(vm.state.value.hasAcceptedPrivacy)
     }
 
     @Test
@@ -228,8 +273,8 @@ class RegisterViewModelTest {
         val vm = RegisterViewModel(authRepo, profileRepo)
         fillValidAccountStep(vm)
         fillValidProfileFields(vm)
-
         vm.submitProfileStep()
+        vm.onPrivacyAccepted()
         assertTrue(vm.state.value.isLoading)
 
         vm.submitProfileStep()
