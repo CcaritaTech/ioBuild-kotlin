@@ -2,6 +2,7 @@ package com.example.iobuild_kt.core.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -50,7 +51,7 @@ fun NavGraph(
 
             navigation(startDestination = Screen.RegisterAccount.route, route = "register") {
                 composable(Screen.RegisterAccount.route) { backStackEntry ->
-                    val parentEntry = navController.getBackStackEntry("register")
+                    val parentEntry = remember(backStackEntry) { navController.getBackStackEntry("register") }
                     val vm = koinViewModel<RegisterViewModel>(viewModelStoreOwner = parentEntry)
                     RegisterAccountScreen(
                         viewModel = vm,
@@ -59,7 +60,7 @@ fun NavGraph(
                     )
                 }
                 composable(Screen.RegisterProfile.route) { backStackEntry ->
-                    val parentEntry = navController.getBackStackEntry("register")
+                    val parentEntry = remember(backStackEntry) { navController.getBackStackEntry("register") }
                     val vm = koinViewModel<RegisterViewModel>(viewModelStoreOwner = parentEntry)
                     RegisterProfileScreen(
                         viewModel = vm,
