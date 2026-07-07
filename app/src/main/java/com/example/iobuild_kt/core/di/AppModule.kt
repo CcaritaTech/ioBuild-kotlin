@@ -10,6 +10,15 @@ import com.example.iobuild_kt.dashboard.data.repository.AnalyticsRepositoryImpl
 import com.example.iobuild_kt.dashboard.domain.repository.AnalyticsRepository
 import com.example.iobuild_kt.dashboard.domain.usecase.GetBuilderDashboardUseCase
 import com.example.iobuild_kt.dashboard.presentation.DashboardViewModel
+import com.example.iobuild_kt.clients.data.api.ClientApiService
+import com.example.iobuild_kt.clients.data.repository.ClientRepositoryImpl
+import com.example.iobuild_kt.clients.domain.repository.ClientRepository
+import com.example.iobuild_kt.clients.domain.usecase.CreateClientUseCase
+import com.example.iobuild_kt.clients.domain.usecase.DeleteClientUseCase
+import com.example.iobuild_kt.clients.domain.usecase.GetClientByIdUseCase
+import com.example.iobuild_kt.clients.domain.usecase.GetClientsUseCase
+import com.example.iobuild_kt.clients.domain.usecase.UpdateClientUseCase
+import com.example.iobuild_kt.clients.presentation.client_list.ClientListViewModel
 import com.example.iobuild_kt.projects.data.api.ProjectApiService
 import com.example.iobuild_kt.projects.data.repository.ProjectRepositoryImpl
 import com.example.iobuild_kt.projects.domain.repository.ProjectRepository
@@ -75,6 +84,14 @@ val devicesModule = module {
     viewModelOf(::DeviceListViewModel)
 }
 
+val clientsModule = module {
+    single<ClientApiService> { get<Retrofit>().create(ClientApiService::class.java) }
+    single<ClientRepository> { ClientRepositoryImpl(get(), get(), get()) }
+    factory { GetClientsUseCase(get()) }; factory { GetClientByIdUseCase(get()) }
+    factory { CreateClientUseCase(get()) }; factory { UpdateClientUseCase(get()) }; factory { DeleteClientUseCase(get()) }
+    viewModelOf(::ClientListViewModel)
+}
+
 val profileModule = module {
     single<ProfileApiService> { get<Retrofit>().create(ProfileApiService::class.java) }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
@@ -82,4 +99,4 @@ val profileModule = module {
     viewModelOf(::ProfileViewModel)
 }
 
-val appModule = listOf(networkModule, dataModule, authModule, analyticsModule, projectsModule, devicesModule, profileModule)
+val appModule = listOf(networkModule, dataModule, authModule, analyticsModule, projectsModule, devicesModule, profileModule, clientsModule)

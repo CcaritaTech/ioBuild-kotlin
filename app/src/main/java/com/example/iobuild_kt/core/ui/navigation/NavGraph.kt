@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
 import com.example.iobuild_kt.auth.presentation.LoginScreen
+import com.example.iobuild_kt.clients.presentation.client_list.ClientListScreen
 import com.example.iobuild_kt.auth.presentation.RegisterAccountScreen
 import com.example.iobuild_kt.auth.presentation.RegisterProfileScreen
 import com.example.iobuild_kt.auth.presentation.RegisterViewModel
@@ -185,12 +186,13 @@ fun NavGraph(
                 }
             }
 
-            // -- PLACEHOLDERS (clients/subscription/settings not yet built; kept so nav drawer items don't crash) --
             composable(Screen.ClientList.route) {
                 IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
-                    PlaceholderScreen(title = Screen.ClientList.title)
+                    ClientListScreen()
                 }
             }
+
+            // -- PLACEHOLDERS (subscription/settings not yet built; kept so nav drawer items don't crash) --
             composable(Screen.Subscription.route) {
                 IoScaffold(currentRoute = Screen.Subscription.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
                     PlaceholderScreen(title = Screen.Subscription.title)
