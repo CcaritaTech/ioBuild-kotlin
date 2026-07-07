@@ -2,18 +2,23 @@ package com.example.iobuild_kt.core.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navArgument
+import com.example.iobuild_kt.auth.domain.repository.AuthRepository
 import com.example.iobuild_kt.auth.presentation.LoginScreen
 import com.example.iobuild_kt.clients.presentation.client_list.ClientListScreen
+import com.example.iobuild_kt.subscription.presentation.SubscriptionScreen
 import com.example.iobuild_kt.auth.presentation.RegisterAccountScreen
 import com.example.iobuild_kt.auth.presentation.RegisterProfileScreen
 import com.example.iobuild_kt.auth.presentation.RegisterViewModel
+import com.example.iobuild_kt.core.data.TokenManager
 import com.example.iobuild_kt.core.i18n.LocalLanguage
 import com.example.iobuild_kt.core.ui.components.IoScaffold
 import com.example.iobuild_kt.dashboard.presentation.DashboardScreen
@@ -22,7 +27,11 @@ import com.example.iobuild_kt.profile.presentation.ProfileScreen
 import com.example.iobuild_kt.projects.presentation.project_detail.ProjectDetailScreen
 import com.example.iobuild_kt.projects.presentation.project_form.ProjectFormScreen
 import com.example.iobuild_kt.projects.presentation.project_list.ProjectListScreen
+import com.example.iobuild_kt.subscription.presentation.SubscriptionAccessState
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun NavGraph(
@@ -31,6 +40,28 @@ fun NavGraph(
     onLanguageChange: (String) -> Unit,
     startDestination: String = Screen.Login.route
 ) {
+    val authRepository: AuthRepository = koinInject()
+    val tokenManager: TokenManager = koinInject()
+    val subscriptionAccessState: SubscriptionAccessState = koinInject()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(startDestination) {
+        if (startDestination == Screen.Dashboard.route) {
+            val builderId = tokenManager.userId.first()
+            if (builderId != null) subscriptionAccessState.refresh(builderId)
+        }
+    }
+
+    // Clears the session token AND the local Room cache — otherwise the next account to log in
+    // on this device would see this account's cached projects/devices/clients until the cache's
+    // 5-minute TTL expired.
+    val handleLogout: () -> Unit = {
+        scope.launch { authRepository.signOut() }
+        navController.navigate(Screen.Login.route) {
+            popUpTo(0) { inclusive = true }
+        }
+    }
+
     CompositionLocalProvider(LocalLanguage provides currentLang) {
         NavHost(
             navController = navController,
@@ -40,8 +71,17 @@ fun NavGraph(
             composable(Screen.Login.route) {
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate(Screen.Dashboard.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
+                        scope.launch {
+                            val builderId = tokenManager.userId.first()
+                            if (builderId != null) subscriptionAccessState.refresh(builderId)
+                            val destination = if (subscriptionAccessState.hasActiveSubscription.value == true) {
+                                Screen.Dashboard.route
+                            } else {
+                                Screen.Subscription.route
+                            }
+                            navController.navigate(destination) {
+                                popUpTo(Screen.Login.route) { inclusive = true }
+                            }
                         }
                     },
                     onNavigateToRegister = {
@@ -67,8 +107,17 @@ fun NavGraph(
                         viewModel = vm,
                         onBack = { navController.popBackStack() },
                         onRegisterSuccess = {
-                            navController.navigate(Screen.Dashboard.route) {
-                                popUpTo("register") { inclusive = true }
+                            scope.launch {
+                                val builderId = tokenManager.userId.first()
+                                if (builderId != null) subscriptionAccessState.refresh(builderId)
+                                val destination = if (subscriptionAccessState.hasActiveSubscription.value == true) {
+                                    Screen.Dashboard.route
+                                } else {
+                                    Screen.Subscription.route
+                                }
+                                navController.navigate(destination) {
+                                    popUpTo("register") { inclusive = true }
+                                }
                             }
                         }
                     )
@@ -82,11 +131,7 @@ fun NavGraph(
                     currentRoute = Screen.Dashboard.route,
                     currentLang = currentLang,
                     onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
+                    onLogout = handleLogout,
                     onLanguageChange = onLanguageChange
                 ) {
                     DashboardScreen()
@@ -98,11 +143,7 @@ fun NavGraph(
                     currentRoute = Screen.ProjectList.route,
                     currentLang = currentLang,
                     onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
+                    onLogout = handleLogout,
                     onLanguageChange = onLanguageChange
                 ) {
                     ProjectListScreen(
@@ -126,11 +167,7 @@ fun NavGraph(
                     currentRoute = Screen.ProjectList.route,
                     currentLang = currentLang,
                     onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
+                    onLogout = handleLogout,
                     onLanguageChange = onLanguageChange
                 ) {
                     ProjectDetailScreen(
@@ -160,11 +197,7 @@ fun NavGraph(
                     currentRoute = Screen.ProjectList.route,
                     currentLang = currentLang,
                     onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = {
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    },
+                    onLogout = handleLogout,
                     onLanguageChange = onLanguageChange
                 ) {
                     ProjectFormScreen(
@@ -176,30 +209,31 @@ fun NavGraph(
             }
 
             composable(Screen.DeviceList.route) {
-                IoScaffold(currentRoute = Screen.DeviceList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
+                IoScaffold(currentRoute = Screen.DeviceList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
                     DeviceListScreen()
                 }
             }
             composable(Screen.Profile.route) {
-                IoScaffold(currentRoute = Screen.Profile.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
+                IoScaffold(currentRoute = Screen.Profile.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
                     ProfileScreen()
                 }
             }
 
             composable(Screen.ClientList.route) {
-                IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
+                IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
                     ClientListScreen()
                 }
             }
 
-            // -- PLACEHOLDERS (subscription/settings not yet built; kept so nav drawer items don't crash) --
             composable(Screen.Subscription.route) {
-                IoScaffold(currentRoute = Screen.Subscription.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
-                    PlaceholderScreen(title = Screen.Subscription.title)
+                IoScaffold(currentRoute = Screen.Subscription.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
+                    SubscriptionScreen()
                 }
             }
+
+            // -- PLACEHOLDERS (settings not yet built; kept so nav drawer items don't crash) --
             composable(Screen.Settings.route) {
-                IoScaffold(currentRoute = Screen.Settings.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }, onLanguageChange = onLanguageChange) {
+                IoScaffold(currentRoute = Screen.Settings.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
                     PlaceholderScreen(title = Screen.Settings.title)
                 }
             }
