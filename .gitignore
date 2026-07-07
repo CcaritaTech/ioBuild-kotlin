@@ -32,5 +32,8 @@ api.properties
 *.env
 secrets.properties
 
+# Firebase project config (per-developer/CI, not shared in repo)
+app/google-services.json
+
 # Local planning docs (specs/plans) - not shared to the remote repo
 docs/superpowers/
