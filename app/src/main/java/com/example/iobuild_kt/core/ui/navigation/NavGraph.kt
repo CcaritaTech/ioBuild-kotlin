@@ -127,33 +127,37 @@ fun NavGraph(
             // -- AUTHENTICATED (wrapped with IoScaffold) --
 
             composable(Screen.Dashboard.route) {
-                IoScaffold(
-                    currentRoute = Screen.Dashboard.route,
-                    currentLang = currentLang,
-                    onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = handleLogout,
-                    onLanguageChange = onLanguageChange
-                ) {
-                    DashboardScreen()
+                GatedRoute(navController) {
+                    IoScaffold(
+                        currentRoute = Screen.Dashboard.route,
+                        currentLang = currentLang,
+                        onNavigate = { screen -> navController.navigate(screen.route) },
+                        onLogout = handleLogout,
+                        onLanguageChange = onLanguageChange
+                    ) {
+                        DashboardScreen()
+                    }
                 }
             }
 
             composable(Screen.ProjectList.route) {
-                IoScaffold(
-                    currentRoute = Screen.ProjectList.route,
-                    currentLang = currentLang,
-                    onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = handleLogout,
-                    onLanguageChange = onLanguageChange
-                ) {
-                    ProjectListScreen(
-                        onProjectClick = { id ->
-                            navController.navigate(Screen.ProjectDetail.createRoute(id))
-                        },
-                        onCreateClick = {
-                            navController.navigate(Screen.ProjectForm.route)
-                        }
-                    )
+                GatedRoute(navController) {
+                    IoScaffold(
+                        currentRoute = Screen.ProjectList.route,
+                        currentLang = currentLang,
+                        onNavigate = { screen -> navController.navigate(screen.route) },
+                        onLogout = handleLogout,
+                        onLanguageChange = onLanguageChange
+                    ) {
+                        ProjectListScreen(
+                            onProjectClick = { id ->
+                                navController.navigate(Screen.ProjectDetail.createRoute(id))
+                            },
+                            onCreateClick = {
+                                navController.navigate(Screen.ProjectForm.route)
+                            }
+                        )
+                    }
                 }
             }
 
@@ -163,21 +167,23 @@ fun NavGraph(
             ) { backStackEntry ->
                 val projectId = backStackEntry.arguments?.getInt("projectId") ?: return@composable
                 val vm = koinViewModel<com.example.iobuild_kt.projects.presentation.project_detail.ProjectDetailViewModel>()
-                IoScaffold(
-                    currentRoute = Screen.ProjectList.route,
-                    currentLang = currentLang,
-                    onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = handleLogout,
-                    onLanguageChange = onLanguageChange
-                ) {
-                    ProjectDetailScreen(
-                        projectId = projectId,
-                        onBack = { navController.popBackStack() },
-                        onEdit = { id ->
-                            navController.navigate(Screen.ProjectForm.createRoute(id))
-                        },
-                        viewModel = vm
-                    )
+                GatedRoute(navController) {
+                    IoScaffold(
+                        currentRoute = Screen.ProjectList.route,
+                        currentLang = currentLang,
+                        onNavigate = { screen -> navController.navigate(screen.route) },
+                        onLogout = handleLogout,
+                        onLanguageChange = onLanguageChange
+                    ) {
+                        ProjectDetailScreen(
+                            projectId = projectId,
+                            onBack = { navController.popBackStack() },
+                            onEdit = { id ->
+                                navController.navigate(Screen.ProjectForm.createRoute(id))
+                            },
+                            viewModel = vm
+                        )
+                    }
                 }
             }
 
@@ -193,24 +199,28 @@ fun NavGraph(
                 val projectId = backStackEntry.arguments?.getInt("projectId")
                 val actualId = if (projectId != null && projectId > 0) projectId else null
                 val vm = koinViewModel<com.example.iobuild_kt.projects.presentation.project_form.ProjectFormViewModel>()
-                IoScaffold(
-                    currentRoute = Screen.ProjectList.route,
-                    currentLang = currentLang,
-                    onNavigate = { screen -> navController.navigate(screen.route) },
-                    onLogout = handleLogout,
-                    onLanguageChange = onLanguageChange
-                ) {
-                    ProjectFormScreen(
-                        projectId = actualId,
-                        onBack = { navController.popBackStack() },
-                        viewModel = vm
-                    )
+                GatedRoute(navController) {
+                    IoScaffold(
+                        currentRoute = Screen.ProjectList.route,
+                        currentLang = currentLang,
+                        onNavigate = { screen -> navController.navigate(screen.route) },
+                        onLogout = handleLogout,
+                        onLanguageChange = onLanguageChange
+                    ) {
+                        ProjectFormScreen(
+                            projectId = actualId,
+                            onBack = { navController.popBackStack() },
+                            viewModel = vm
+                        )
+                    }
                 }
             }
 
             composable(Screen.DeviceList.route) {
-                IoScaffold(currentRoute = Screen.DeviceList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
-                    DeviceListScreen()
+                GatedRoute(navController) {
+                    IoScaffold(currentRoute = Screen.DeviceList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
+                        DeviceListScreen()
+                    }
                 }
             }
             composable(Screen.Profile.route) {
@@ -220,8 +230,10 @@ fun NavGraph(
             }
 
             composable(Screen.ClientList.route) {
-                IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
-                    ClientListScreen()
+                GatedRoute(navController) {
+                    IoScaffold(currentRoute = Screen.ClientList.route, currentLang = currentLang, onNavigate = { screen -> navController.navigate(screen.route) }, onLogout = handleLogout, onLanguageChange = onLanguageChange) {
+                        ClientListScreen()
+                    }
                 }
             }
 
