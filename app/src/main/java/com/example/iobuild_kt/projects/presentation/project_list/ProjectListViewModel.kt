@@ -24,7 +24,9 @@ class ProjectListViewModel(
     private val _state = MutableStateFlow<ProjectListUiState>(ProjectListUiState.Loading)
     val state: StateFlow<ProjectListUiState> = _state.asStateFlow()
 
-    init { loadProjects() }
+    // Loaded from ProjectListScreen's LaunchedEffect(Unit) instead of init{} — the ViewModel
+    // survives navigating to ProjectForm and back (same nav back-stack entry), so init{} alone
+    // would never re-run and the list would go stale after creating/editing a project.
 
     fun loadProjects() {
         viewModelScope.launch {
