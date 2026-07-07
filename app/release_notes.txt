@@ -1,1 +1,1 @@
-Build de prueba subida via Firebase App Distribution.
+Se agrega el bloqueo de secciones (Dashboard, Proyectos, Dispositivos, Clientes) para cuentas sin suscripcion activa, con redireccion automatica a la pantalla de Suscripcion.
