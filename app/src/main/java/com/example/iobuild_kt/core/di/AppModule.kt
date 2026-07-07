@@ -39,6 +39,15 @@ import com.example.iobuild_kt.devices.presentation.device_list.DeviceListViewMod
 import com.example.iobuild_kt.projects.presentation.project_detail.ProjectDetailViewModel
 import com.example.iobuild_kt.projects.presentation.project_form.ProjectFormViewModel
 import com.example.iobuild_kt.projects.presentation.project_list.ProjectListViewModel
+import com.example.iobuild_kt.subscription.data.api.SubscriptionApiService
+import com.example.iobuild_kt.subscription.data.repository.SubscriptionRepositoryImpl
+import com.example.iobuild_kt.subscription.domain.repository.SubscriptionRepository
+import com.example.iobuild_kt.subscription.domain.usecase.ConfirmPaymentUseCase
+import com.example.iobuild_kt.subscription.domain.usecase.CreateCheckoutSessionUseCase
+import com.example.iobuild_kt.subscription.domain.usecase.GetCurrentSubscriptionUseCase
+import com.example.iobuild_kt.subscription.domain.usecase.GetPlansUseCase
+import com.example.iobuild_kt.subscription.presentation.SubscriptionAccessState
+import com.example.iobuild_kt.subscription.presentation.SubscriptionViewModel
 import com.example.iobuild_kt.profile.data.api.ProfileApiService
 import com.example.iobuild_kt.profile.data.repository.ProfileRepositoryImpl
 import com.example.iobuild_kt.profile.domain.repository.ProfileRepository
@@ -51,7 +60,7 @@ import retrofit2.Retrofit
 
 val authModule = module {
     single<AuthApiService> { get<Retrofit>().create(AuthApiService::class.java) }
-    single<AuthRepository> { AuthRepositoryImpl(get(), get()) }
+    single<AuthRepository> { AuthRepositoryImpl(get(), get(), get()) }
     viewModelOf(::LoginViewModel)
     viewModelOf(::RegisterViewModel)
 }
@@ -92,6 +101,15 @@ val clientsModule = module {
     viewModelOf(::ClientListViewModel)
 }
 
+val subscriptionModule = module {
+    single<SubscriptionApiService> { get<Retrofit>().create(SubscriptionApiService::class.java) }
+    single<SubscriptionRepository> { SubscriptionRepositoryImpl(get()) }
+    factory { GetPlansUseCase(get()) }; factory { GetCurrentSubscriptionUseCase(get()) }
+    factory { CreateCheckoutSessionUseCase(get()) }; factory { ConfirmPaymentUseCase(get()) }
+    single { SubscriptionAccessState(get()) }
+    viewModelOf(::SubscriptionViewModel)
+}
+
 val profileModule = module {
     single<ProfileApiService> { get<Retrofit>().create(ProfileApiService::class.java) }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
@@ -99,4 +117,4 @@ val profileModule = module {
     viewModelOf(::ProfileViewModel)
 }
 
-val appModule = listOf(networkModule, dataModule, authModule, analyticsModule, projectsModule, devicesModule, profileModule, clientsModule)
+val appModule = listOf(networkModule, dataModule, authModule, analyticsModule, projectsModule, devicesModule, profileModule, clientsModule, subscriptionModule)
