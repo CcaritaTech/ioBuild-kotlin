@@ -6,13 +6,17 @@ import com.example.iobuild_kt.auth.data.api.SignUpRequest
 import com.example.iobuild_kt.auth.domain.model.AuthenticatedUser
 import com.example.iobuild_kt.auth.domain.repository.AuthRepository
 import com.example.iobuild_kt.core.data.TokenManager
+import com.example.iobuild_kt.core.data.local.IoBuildDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
 
 class AuthRepositoryImpl(
     private val api: AuthApiService,
-    private val tokenManager: TokenManager
+    private val tokenManager: TokenManager,
+    private val database: IoBuildDatabase
 ) : AuthRepository {
 
     override suspend fun signIn(email: String, password: String): Result<AuthenticatedUser> {
@@ -59,6 +63,13 @@ class AuthRepositoryImpl(
 
     override suspend fun signOut() {
         tokenManager.clearSession()
+        // Otherwise the next account to log in on this device would see this account's
+        // cached projects/devices/clients until the 5-minute TTL expired.
+        // clearAllTables() is a blocking Room call, not suspend-aware — it must be pushed off
+        // the main thread explicitly or Room throws (rememberCoroutineScope() alone runs on Main).
+        withContext(Dispatchers.IO) {
+            database.clearAllTables()
+        }
     }
 
     override suspend fun isLoggedIn(): Boolean {

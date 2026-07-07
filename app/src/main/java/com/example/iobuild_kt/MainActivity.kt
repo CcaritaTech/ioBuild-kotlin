@@ -1,5 +1,6 @@
 package com.example.iobuild_kt
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -25,16 +26,23 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.iobuild_kt.core.data.TokenManager
 import com.example.iobuild_kt.core.i18n.LanguageManager
+import com.example.iobuild_kt.core.payment.PaymentReturnBus
+import com.example.iobuild_kt.core.payment.PaymentReturnEvent
 import com.example.iobuild_kt.core.ui.navigation.NavGraph
 import com.example.iobuild_kt.ui.theme.IoBuildktTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.compose.koinInject
 
 class MainActivity : AppCompatActivity() {
+
+    private val paymentReturnBus: PaymentReturnBus by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handlePaymentDeepLink(intent)
         setContent {
             val languageManager: LanguageManager = koinInject()
             val currentLang by languageManager.currentLanguage.collectAsState(initial = "es")
@@ -86,6 +94,21 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handlePaymentDeepLink(intent)
+    }
+
+    private fun handlePaymentDeepLink(intent: Intent?) {
+        val uri = intent?.data ?: return
+        if (uri.scheme != "iobuild" || uri.host != "payment") return
+        when (uri.lastPathSegment) {
+            "success" -> paymentReturnBus.emit(PaymentReturnEvent(success = true, sessionId = uri.getQueryParameter("session_id")))
+            "cancel" -> paymentReturnBus.emit(PaymentReturnEvent(success = false, sessionId = null))
         }
     }
 }

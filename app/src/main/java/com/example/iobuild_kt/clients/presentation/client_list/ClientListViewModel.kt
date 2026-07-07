@@ -23,15 +23,18 @@ sealed class ClientListUiState {
 
 class ClientListViewModel(
     private val getClients: GetClientsUseCase,
-    private val createClient: CreateClientUseCase,
-    private val updateClient: UpdateClientUseCase,
-    private val deleteClient: DeleteClientUseCase,
+    private val createClientUseCase: CreateClientUseCase,
+    private val updateClientUseCase: UpdateClientUseCase,
+    private val deleteClientUseCase: DeleteClientUseCase,
     private val getProjects: GetProjectsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<ClientListUiState>(ClientListUiState.Loading)
     val state: StateFlow<ClientListUiState> = _state.asStateFlow()
 
+    // Not filtered by builder: projects created through the app never get a real builderId
+    // from the backend (always 0), so scoping clients/dropdown-projects by ownership would
+    // hide clients tied to projects the user just created themselves.
     fun loadClients() {
         viewModelScope.launch {
             _state.value = ClientListUiState.Loading
@@ -47,7 +50,7 @@ class ClientListViewModel(
 
     fun createClient(data: ClientFormData) {
         viewModelScope.launch {
-            createClient(Client(
+            createClientUseCase(Client(
                 fullName = data.fullName, projectId = data.projectId, projectName = data.projectName,
                 accountStatement = data.accountStatement, email = data.email,
                 phoneNumber = data.phoneNumber, address = data.address
@@ -58,7 +61,7 @@ class ClientListViewModel(
 
     fun updateClient(id: Int, data: ClientFormData) {
         viewModelScope.launch {
-            updateClient(Client(
+            updateClientUseCase(Client(
                 id = id, fullName = data.fullName, projectId = data.projectId, projectName = data.projectName,
                 accountStatement = data.accountStatement, email = data.email,
                 phoneNumber = data.phoneNumber, address = data.address
@@ -67,7 +70,11 @@ class ClientListViewModel(
         }
     }
 
+    // Renamed the injected use case to deleteClientUseCase — it used to share the name
+    // "deleteClient" with this function, and `deleteClient(id)` below resolved to a recursive
+    // call to this same function (not the use case's invoke), spawning an unbounded flood of
+    // coroutines that never actually called the API and crashed the app with an OOM.
     fun deleteClient(id: Int) {
-        viewModelScope.launch { deleteClient(id); loadClients() }
+        viewModelScope.launch { deleteClientUseCase(id); loadClients() }
     }
 }

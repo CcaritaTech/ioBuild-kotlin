@@ -109,6 +109,9 @@ dependencies {
     implementation(libs.biometric)
     implementation(libs.appcompat)
 
+    // Stripe Checkout (Custom Tabs)
+    implementation(libs.androidx.browser)
+
     // Testing
     testImplementation(libs.junit)
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")

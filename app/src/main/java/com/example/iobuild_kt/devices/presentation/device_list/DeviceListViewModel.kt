@@ -21,9 +21,9 @@ sealed class DeviceListUiState {
 
 class DeviceListViewModel(
     private val getDevices: GetDevicesUseCase,
-    private val createDevice: CreateDeviceUseCase,
-    private val updateDevice: UpdateDeviceUseCase,
-    private val deleteDevice: DeleteDeviceUseCase
+    private val createDeviceUseCase: CreateDeviceUseCase,
+    private val updateDeviceUseCase: UpdateDeviceUseCase,
+    private val deleteDeviceUseCase: DeleteDeviceUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow<DeviceListUiState>(DeviceListUiState.Loading)
@@ -31,6 +31,9 @@ class DeviceListViewModel(
 
     init { loadDevices() }
 
+    // Not filtered by builder: devices only carry a projectId, and projects created through
+    // the app never get a real builderId from the backend (always 0), so scoping by owned
+    // projects would hide devices on projects the user just created themselves.
     fun loadDevices() {
         viewModelScope.launch {
             _state.value = DeviceListUiState.Loading
@@ -46,7 +49,7 @@ class DeviceListViewModel(
 
     fun createDevice(data: DeviceFormData) {
         viewModelScope.launch {
-            createDevice(Device(
+            createDeviceUseCase(Device(
                 name = data.name, type = data.type, location = data.location,
                 macAddress = data.macAddress, status = data.status
             ))
@@ -56,7 +59,7 @@ class DeviceListViewModel(
 
     fun updateDevice(id: Int, data: DeviceFormData) {
         viewModelScope.launch {
-            updateDevice(Device(
+            updateDeviceUseCase(Device(
                 id = id, name = data.name, type = data.type, location = data.location,
                 macAddress = data.macAddress, status = data.status
             ))
@@ -64,7 +67,11 @@ class DeviceListViewModel(
         }
     }
 
+    // Renamed the injected use case to deleteDeviceUseCase — it used to share the name
+    // "deleteDevice" with this function, and `deleteDevice(id)` below resolved to a recursive
+    // call to this same function (not the use case's invoke), spawning an unbounded flood of
+    // coroutines that never actually called the API and crashed the app with an OOM.
     fun deleteDevice(id: Int) {
-        viewModelScope.launch { deleteDevice(id); loadDevices() }
+        viewModelScope.launch { deleteDeviceUseCase(id); loadDevices() }
     }
 }

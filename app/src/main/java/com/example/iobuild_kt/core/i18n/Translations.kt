@@ -161,6 +161,10 @@ object Translations {
         "subscription.soon" to "Esta característica estará disponible muy pronto",
         "subscription.plan_current" to "Plan actual",
         "subscription.price" to "S/",
+        "subscription.subscribe" to "Suscribirse",
+        "subscription.processing" to "Procesando pago...",
+        "subscription.payment_confirmed" to "¡Pago confirmado!",
+        "subscription.payment_cancelled" to "Pago cancelado",
 
         "profile.title" to "Perfil",
         "profile.edit" to "Editar Perfil",
@@ -368,6 +372,10 @@ object Translations {
         "subscription.soon" to "This feature will be available soon",
         "subscription.plan_current" to "Current plan",
         "subscription.price" to "S/",
+        "subscription.subscribe" to "Subscribe",
+        "subscription.processing" to "Processing payment...",
+        "subscription.payment_confirmed" to "Payment confirmed!",
+        "subscription.payment_cancelled" to "Payment cancelled",
 
         "profile.title" to "Profile",
         "profile.edit" to "Edit Profile",
