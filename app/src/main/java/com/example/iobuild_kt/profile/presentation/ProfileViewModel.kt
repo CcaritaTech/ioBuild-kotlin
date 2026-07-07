@@ -2,12 +2,14 @@ package com.example.iobuild_kt.profile.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.iobuild_kt.core.data.TokenManager
 import com.example.iobuild_kt.profile.domain.model.Profile
 import com.example.iobuild_kt.profile.domain.usecase.GetProfileUseCase
 import com.example.iobuild_kt.profile.domain.usecase.UpdateProfileUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class ProfileUiState(
@@ -25,7 +27,8 @@ data class ProfileUiState(
 
 class ProfileViewModel(
     private val getProfile: GetProfileUseCase,
-    private val updateProfile: UpdateProfileUseCase
+    private val updateProfile: UpdateProfileUseCase,
+    private val tokenManager: TokenManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileUiState())
@@ -33,10 +36,15 @@ class ProfileViewModel(
 
     init { loadProfile() }
 
-    fun loadProfile(userId: Int = 1) {
+    fun loadProfile(userId: Int? = null) {
         viewModelScope.launch {
             _state.value = ProfileUiState(isLoading = true)
-            getProfile(userId).let { result ->
+            val actualUserId = userId ?: tokenManager.userId.first()
+            if (actualUserId == null) {
+                _state.value = ProfileUiState(isLoading = false, error = "No hay sesión activa")
+                return@launch
+            }
+            getProfile(actualUserId).let { result ->
                 if (result.isSuccess) {
                     val p = result.getOrDefault(Profile(name = ""))
                     _state.value = ProfileUiState(

@@ -14,6 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,10 @@ fun ProjectListScreen(
     viewModel: ProjectListViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // Re-runs every time this screen is (re)composed — including when navigating back
+    // from ProjectForm after creating/editing a project — so the list always reflects it.
+    LaunchedEffect(Unit) { viewModel.loadProjects() }
 
     when (val current = state) {
         is ProjectListUiState.Loading -> LoadingScreen()

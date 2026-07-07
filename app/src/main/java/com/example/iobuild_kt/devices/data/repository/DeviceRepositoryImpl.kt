@@ -46,16 +46,19 @@ class DeviceRepositoryImpl(
     }
 
     override suspend fun createDevice(device: Device): Result<Device> = runCatching {
-        val dto = api.createDevice(device.toCreateRequest())
-        dao.insert(dto.toEntity())
+        // Backend only returns { "id": ... } on create, so build the full device from what we already sent
+        val response = api.createDevice(device.toCreateRequest())
+        val created = device.copy(id = response.id)
+        dao.insert(created.toEntity())
         meta.upsert(CacheMetadata("devices", System.currentTimeMillis()))
-        dto.toDomain()
+        created
     }
 
     override suspend fun updateDevice(device: Device): Result<Device> = runCatching {
-        val dto = api.updateDevice(device.id, device.toUpdateRequest())
-        dao.insert(dto.toEntity())
-        dto.toDomain()
+        // Backend returns 200 with an empty body on update, so there's no DTO to read back
+        api.updateDevice(device.id, device.toUpdateRequest())
+        dao.insert(device.toEntity())
+        device
     }
 
     override suspend fun deleteDevice(id: Int): Result<Unit> = runCatching {
@@ -70,6 +73,11 @@ private fun DeviceEntity.toDomain() = Device(
 )
 
 private fun com.example.iobuild_kt.devices.data.dto.DeviceDto.toEntity() = DeviceEntity(
+    id = id, name = name, type = type, location = location,
+    macAddress = macAddress, projectId = projectId, status = status
+)
+
+private fun Device.toEntity() = DeviceEntity(
     id = id, name = name, type = type, location = location,
     macAddress = macAddress, projectId = projectId, status = status
 )

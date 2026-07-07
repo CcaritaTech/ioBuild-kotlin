@@ -18,6 +18,8 @@ data class UpdateDeviceRequest(
     val macAddress: String = "", val projectId: Int = 1, val status: String = "Online"
 )
 
+data class CreateDeviceResponse(val id: Int)
+
 interface DeviceApiService {
     @GET("devices")
     suspend fun getAllDevices(): List<DeviceDto>
@@ -25,11 +27,13 @@ interface DeviceApiService {
     @GET("devices/{id}")
     suspend fun getDeviceById(@Path("id") id: Int): DeviceDto
 
+    // Backend only replies with the new id, not the full device — see CreateDeviceResponse
     @POST("devices")
-    suspend fun createDevice(@Body request: CreateDeviceRequest): DeviceDto
+    suspend fun createDevice(@Body request: CreateDeviceRequest): CreateDeviceResponse
 
+    // Backend replies 200 with an empty body, so there's nothing to deserialize
     @PUT("devices/{id}")
-    suspend fun updateDevice(@Path("id") id: Int, @Body request: UpdateDeviceRequest): DeviceDto
+    suspend fun updateDevice(@Path("id") id: Int, @Body request: UpdateDeviceRequest)
 
     @DELETE("devices/{id}")
     suspend fun deleteDevice(@Path("id") id: Int)

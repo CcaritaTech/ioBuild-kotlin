@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class ProjectFormState(
+    val id: Int = 0,
     val name: String = "",
     val description: String = "",
     val location: String = "",
@@ -43,7 +44,7 @@ class ProjectFormViewModel(
             if (result.isSuccess) {
                 val p = result.getOrDefault(Project(name = ""))
                 _state.value = _state.value.copy(
-                    name = p.name, description = p.description, location = p.location,
+                    id = p.id, name = p.name, description = p.description, location = p.location,
                     totalUnits = p.totalUnits.toString(), occupiedUnits = p.occupiedUnits.toString(),
                     status = p.status, imageUrl = p.imageUrl, isLoading = false
                 )
@@ -68,6 +69,7 @@ class ProjectFormViewModel(
         viewModelScope.launch {
             _state.value = s.copy(isSaving = true, error = null)
             val project = Project(
+                id = s.id,
                 name = s.name, description = s.description, location = s.location,
                 totalUnits = s.totalUnits.toIntOrNull() ?: 0,
                 occupiedUnits = s.occupiedUnits.toIntOrNull() ?: 0,
