@@ -40,6 +40,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -58,6 +60,7 @@ import com.example.iobuild_kt.core.i18n.Translations
 import com.example.iobuild_kt.core.i18n.lang
 import com.example.iobuild_kt.core.ui.navigation.Screen
 import com.example.iobuild_kt.profile.domain.repository.ProfileRepository
+import com.example.iobuild_kt.subscription.presentation.SubscriptionAccessState
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -72,6 +75,13 @@ private val builderNavItems = listOf(
     NavItem(Screen.DeviceList, Icons.Default.Build, "nav.devices"),
     NavItem(Screen.Subscription, Icons.Default.CreditCard, "nav.subscription"),
     NavItem(Screen.Settings, Icons.Default.Settings, "nav.configuration"),
+)
+
+private val gatedRoutes = setOf(
+    Screen.Dashboard.route,
+    Screen.ProjectList.route,
+    Screen.DeviceList.route,
+    Screen.ClientList.route
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,6 +100,8 @@ fun IoScaffold(
     // Load real profile data
     val tokenManager: TokenManager = koinInject()
     val profileRepository: ProfileRepository = koinInject()
+    val subscriptionAccessState: SubscriptionAccessState = koinInject()
+    val hasActiveSubscription by subscriptionAccessState.hasActiveSubscription.collectAsState()
     var userName by remember { mutableStateOf("") }
     var userPhotoUrl by remember { mutableStateOf<String?>(null) }
 
@@ -129,12 +141,15 @@ fun IoScaffold(
                     Spacer(Modifier.height(8.dp))
                     builderNavItems.forEach { item ->
                         val isSelected = currentRoute == item.screen.route
+                        val isEnabled = hasActiveSubscription != false || item.screen.route !in gatedRoutes
                         NavigationDrawerItem(
                             icon = { Icon(item.icon, contentDescription = null) },
                             label = { Text(lang(item.labelKey)) },
                             selected = isSelected,
-                            onClick = { onNavigate(item.screen); scope.launch { drawerState.close() } },
-                            modifier = Modifier.padding(horizontal = 12.dp),
+                            onClick = { if (isEnabled) { onNavigate(item.screen); scope.launch { drawerState.close() } } },
+                            modifier = Modifier
+                                .padding(horizontal = 12.dp)
+                                .alpha(if (isEnabled) 1f else 0.38f),
                             colors = NavigationDrawerItemDefaults.colors(
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
